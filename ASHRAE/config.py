@@ -10,4 +10,4 @@ Contains data config
 '''
 
 class Config:
-    BASE_DIR = r'C:\Users\Shubham\Desktop\KaggleCompetitions\ASHRAE'
+    BASE_DIR = r'C:\Users\Shubham\Desktop\KaggleCompetitons\ASHRAE'
