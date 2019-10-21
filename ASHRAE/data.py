@@ -13,6 +13,7 @@ from config import Config
 from os.path import join as pjoin
 import pickle as pkl
 import datetime as dt
+from sklearn import preprocessing
 
 class DataHelper:
     '''
@@ -33,21 +34,36 @@ class DataHelper:
             print("Saving pickle file")
             pandas_pickle = open(self.pklFileName, 'w')
             pkl.dump(self.csv_dict, pandas_pickle)
+        else:
+            print("Loading from pickle file")
         
-    def dataProc(self, df):
+    def dataProc(self, df, metadata):
         '''
-        Following transformations take place:
+        df is train/test
         timestamp converted to ordinal numbers, can be used for regression
+        one-hot encode categorical meter variable
+        Joins on weather and metadata
+        Transformation can take place on both train and test
         '''
         df['timestamp'] = pd.to_datetime(df['timestamp'], 
                                   format='%Y-%m-%d %H:%M:%S')
         df['timestamp'] = df['timestamp'].map(dt.datetime.toordinal)
-            
+        df['meter'] = pd.Categorical(df['meter'])
+        dfDummies = pd.get_dummies(df['meter'], prefix='meter')
+        df = pd.concat([df, dfDummies], axis=1) 
+        df = df.drop(df['meter'])
+        df_metadata = pd.merge(df, metadata, on='building_id', how='outer')
+        return df, df_metadata
     
     def dataViz(self):
         self.csv_dict = pkl.load(self.pklFileName)
-        
-        
+        df_metadata_train = self.csv_dict['building_metadata']
+        df_train = self.csv_dict['train']
+        df_test = self.csv_dict['test']
+        df_train, df_metadata_train = self.dataProc(df_train, 
+                                                    df_metadata_train)
+        print('df_train columns are as follows : {}'.format(df_train.columns))
+        print('df_test columns are as follows : {}'.format(df_test.columns))        
         
 if __name__ == "__main__":
     cfg = Config()
